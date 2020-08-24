@@ -119,9 +119,7 @@ for n, m in zip(ns, ms):
         entrainment_ratio.append(0)
     else:
         entrainment_ratio.append(float(n) / (float(m) + 1e-9))
-entrainment_ratio = (
-    np.array(entrainment_ratio).reshape(grid_size, grid_size).transpose()
-)
+entrainment_ratio = np.array(entrainment_ratio).reshape(grid_size, grid_size).transpose()
 
 plt.figure()
 X = np.linspace(alpha_low, alpha_high, grid_size)

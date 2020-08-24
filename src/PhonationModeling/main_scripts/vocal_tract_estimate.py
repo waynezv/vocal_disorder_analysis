@@ -68,16 +68,12 @@ logging.config.dictConfig(args["log"])  # setup logger
 logger = logging.getLogger("main")
 
 # Data
-wav_file = (
-    "../../data/FEMH_Data/processed/resample_8k/Training_Dataset/Normal/001.8k.wav"
-)
+wav_file = "../../data/FEMH_Data/processed/resample_8k/Training_Dataset/Normal/001.8k.wav"
 # wav_file = '../../data/FEMH_Data/processed/resample_8k/Training_Dataset/Pathological/Neoplasm/001.8k.wav'
 # wav_file = '../../data/FEMH_Data/processed/resample_8k/Training_Dataset/Pathological/Phonotrauma/001.8k.wav'
 # wav_file = '../../data/FEMH_Data/processed/resample_8k/Training_Dataset/Pathological/Vocal_palsy/001.8k.wav'
 samples, fs = pcm16_to_float(wav_file)
-assert fs == 8000, "{}: incompatible sample rate" "--need 8000 but got {}".format(
-    wav_file, fs
-)
+assert fs == 8000, "{}: incompatible sample rate" "--need 8000 but got {}".format(wav_file, fs)
 
 # fig = plt.figure()
 # plt.plot(np.linspace(0, len(samples) / fs, len(samples)), samples)
@@ -199,9 +195,7 @@ while R > 0.1:
         sol = sol[:-1]
     assert len(sol) == len(
         samples
-    ), "Inconsistent length: ODE sol ({:d}) / wav file ({:d})".format(
-        len(sol), len(samples)
-    )
+    ), "Inconsistent length: ODE sol ({:d}) / wav file ({:d})".format(len(sol), len(samples))
 
     X = sol[:, [1, 3]]  # vocal fold displacement (right, left), cm
     dX = sol[:, [2, 4]]  # cm/s

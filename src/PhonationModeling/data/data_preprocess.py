@@ -106,10 +106,12 @@ def get_wav_segments(
 if __name__ == "__main__":
     data_root = "/Users/wzhao1/Dropbox/Creaky Voice"
     project_root = "/Users/wzhao1/Documents/ProJEX/CMU/vocal_disorder_analysis"
-    save_dir = os.path.join(project_root, "creaky_voice/data/processed/phone_L_normal")
+    save_dir = os.path.join(project_root, "data/creaky_voice/processed/phone_AA1_creaky")
 
-    wav_lst = [line.rstrip() for line in open("creaky_voice/src/data/wav.lst")]
-    txtgrd_lst = [line.rstrip() for line in open("creaky_voice/src/data/textgrid.lst")]
+    wav_lst = [line.rstrip() for line in open("src/PhonationModeling/data/filelists/wav.lst")]
+    txtgrd_lst = [
+        line.rstrip() for line in open("src/PhonationModeling/data/filelists/textgrid.lst")
+    ]
 
     cnt = 1
     for wf, tf in zip(wav_lst, txtgrd_lst):
@@ -127,14 +129,14 @@ if __name__ == "__main__":
         cnt = cnt + 1
 
         # Get creaky phone segments
-        ph_intvls = dict_phone_interval(tier_phone)["L"]  # NOTE: phone: L
-        ph_segs = get_phone_segments(tier_c, ph_intvls, from_creaky=False)
+        ph_intvls = dict_phone_interval(tier_phone)["AA1"]  # NOTE: phone
+        ph_segs = get_phone_segments(tier_c, ph_intvls, from_creaky=True)
         wav_segs = get_wav_segments(wav_data, sample_rate, ph_segs)
 
         # Save to wav
         for i, w_seg in enumerate(wav_segs):
             wavfile.write(
-                os.path.join(save_dir, wf.rstrip(".wav") + f"_phone_L_{i:d}_normal.wav"),
+                os.path.join(save_dir, wf.rstrip(".wav") + f"_phone_AA1_{i:d}.wav"),
                 sample_rate,
                 w_seg,
             )

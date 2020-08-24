@@ -13,14 +13,14 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.io import wavfile
 
-sys.path.append("creaky_voice/src/models/vocal_fold")
-sys.path.append("creaky_voice/src/solvers")
-sys.path.append("creaky_voice/src/solvers/ode_solvers")
-from adjoint_model_displacement import adjoint_model
-from dae_solver import dae_solver
-from ode_solver import ode_solver
-from optimization import optim_adapt_step, optim_grad_step
-from vocal_fold_model_displacement import vdp_coupled, vdp_jacobian
+from PhonationModeling.models.vocal_fold.vocal_fold_model_displacement import (
+    vdp_coupled,
+    vdp_jacobian,
+)
+from PhonationModeling.models.vocal_fold.adjoint_model_displacement import adjoint_model
+from PhonationModeling.solvers.ode_solvers.ode_solver import ode_solver
+from PhonationModeling.solvers.ode_solvers.dae_solver import dae_solver
+from PhonationModeling.solvers.optimization import optim_adapt_step, optim_grad_step
 
 
 # Load configures
@@ -51,8 +51,10 @@ logger = logging.getLogger("main")
 data_root = configs["data_root"]
 wav_dir = configs["wav_dir"]
 flw_dir = configs["glottal_flow_dir"]
-wav_lst = [line.rstrip() for line in open(configs["wav_list"])]
-flw_lst = [line.rstrip() for line in open(configs["glottal_flow_list"])]
+wav_lst = [line.rstrip() for line in open(os.path.join(configs["list_dir"], configs["wav_list"]))]
+flw_lst = [
+    line.rstrip() for line in open(os.path.join(configs["list_dir"], configs["glottal_flow_list"]))
+]
 
 # Set constants
 M = 0.5  # mass, g/cm^2
