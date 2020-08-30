@@ -1,49 +1,54 @@
 # -*- coding: utf-8 -*-
+from typing import Callable, List
 
 import numpy as np
 from scipy.integrate import ode
-import pdb
 
 
 def ode_solver(
-    model,
-    model_jacobian,
-    model_params,
-    init_state,
-    init_t,
-    solver="lsoda",
-    ixpr=1,
-    dt=0.1,
-    tmax=1000,
-):
-    """
-    ODE solver.
+    model: Callable,
+    model_jacobian: Callable,
+    model_params: List[float],
+    init_state: List[float],
+    init_t: float,
+    solver: str = "lsoda",
+    ixpr: int = 1,
+    dt: float = 0.1,
+    tmax: float = 1000,
+) -> np.ndarray:
+    """ ODE solver.
 
-    Parameters
-    ----------
-    model: ODE model dy = f(t, y)
-    model_jacobian: Jacobian of ODE model
-    model_params: model parameters, List[float]
-    init_state: initial model state, List[float]
-    init_t: initial simulation time, float
-    solver: ODE solver, string
-        Options: vode, dopri5, dop853, lsoda; depends on stiffness and precision.
-    ixpr: whether to generate extra printing at method switches, int
-    dt: time step increment, float
-    tmax: maximum simulation time, float
+    Args:
+        model: Callable
+            ODE model dy = f(t, y).
+        model_jacobian: Callable
+            Jacobian of ODE model.
+        model_params: List[float]
+            Model parameters.
+        init_state: List[float]
+            Initial model state.
+        init_t: float
+            Initial simulation time.
+        solver: str
+            Solver name. Options: vode, dopri5, dop853, lsoda; depends on stiffness and precision.
+        ixpr: int
+            Whether to generate extra printing at method switches.
+        dt: float
+            Time step increment.
+        tmax: float
+            Maximum simulation time.
 
-    Returns
-    -------
-    sol: solution [time, model states], np.array[float]
+    Returns:
+        sol: np.ndarray[float]
+            Solution [time, model states].
     """
     sol = []
 
     r = ode(model, model_jacobian)
+
     r.set_f_params(*model_params)
     r.set_jac_params(*model_params)
-
     r.set_initial_value(init_state, init_t)
-
     r.set_integrator(solver, with_jacobian=True, ixpr=ixpr)
 
     while r.successful() and r.t < tmax:

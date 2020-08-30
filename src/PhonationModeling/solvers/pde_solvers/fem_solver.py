@@ -1,10 +1,12 @@
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot as plt
-from matplotlib import cm
-import fenics as F
-import dolfin
 import pdb
+
+import numpy as np
+from matplotlib import cm
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+import dolfin
+import fenics as F
 
 
 def UnitHyperCube(divisions):
@@ -79,13 +81,7 @@ def residual(u_n, u_nm1, u_nm2, f_n, dt, c):
     # u_nm2_ = F.project(u_nm2, V).vector()[:]
     # ddu_n = F.project(u_n.dx(0).dx(0), V).vector()[:]
 
-    R = np.sum(
-        u_n_v
-        - (dt ** 2) * (c ** 2) * ddu_n_v
-        - (dt ** 2) * f_n_v
-        - 2 * u_nm1_v
-        + u_nm2_v
-    )
+    R = np.sum(u_n_v - (dt ** 2) * (c ** 2) * ddu_n_v - (dt ** 2) * f_n_v - 2 * u_nm1_v + u_nm2_v)
     return R
 
 
@@ -105,8 +101,7 @@ def pde_solver(
     backward=False,
     iteration=0,
 ):
-    """
-    Solve
+    """Solve
 
         d^2u/dt^2 = c^2 d^2u/dx^2 + f(x, t)
 
@@ -115,7 +110,7 @@ def pde_solver(
                 u(x, 0) = u_I
                 du(x, 0)/dt = 0
 
-    with Backward Euler in time.
+        with Backward Euler in time.
 
     Parameters
     ----------
@@ -175,10 +170,7 @@ def pde_solver(
         v = F.TestFunction(V)
 
         # Define variational problem
-        a = (
-            F.inner(u, v) * F.dx
-            + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
-        )
+        a = F.inner(u, v) * F.dx + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
         L = ((DT ** 2) * f + 2 * u_nm1 - u_nm2) * v * F.dx
         return a, L
 
@@ -371,8 +363,7 @@ def pde_solver_backward(
     u_e=None,
     iteration=0,
 ):
-    """
-    Solve
+    """Solve
 
         d^2u/dt^2 = c^2 d^2u/dx^2 + f(x, t)
 
@@ -380,7 +371,7 @@ def pde_solver_backward(
                 u(x, T) = u_I
                 du(x, 0)/dt = 0
 
-    with Backward Euler in time.
+        with Backward Euler in time.
 
     Parameters
     ----------
@@ -445,13 +436,10 @@ def pde_solver_backward(
                         integrals_N.append(g[0] * v * ds(i))
 
         # Define variational problem
-        a = (
-            F.inner(u, v) * F.dx
-            + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
+        a = F.inner(u, v) * F.dx + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
+        L = ((DT ** 2) * f[0] + 2 * u_nm1 - u_nm2) * v * F.dx + (DT ** 2) * (C ** 2) * sum(
+            integrals_N
         )
-        L = ((DT ** 2) * f[0] + 2 * u_nm1 - u_nm2) * v * F.dx + (DT ** 2) * (
-            C ** 2
-        ) * sum(integrals_N)
         return a, L
 
     def _assembly(V):

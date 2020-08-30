@@ -106,7 +106,11 @@ def get_wav_segments(
 if __name__ == "__main__":
     data_root = "/Users/wzhao1/Dropbox/Creaky Voice"
     project_root = "/Users/wzhao1/Documents/ProJEX/CMU/vocal_disorder_analysis"
-    save_dir = os.path.join(project_root, "data/creaky_voice/processed/phone_AA1_creaky")
+    save_dir = os.path.join(project_root, "data/creaky_voice/processed/phone_AA1_normal")
+    try:
+        os.makedirs(save_dir)
+    except FileExistsError:
+        print(f"folder {save_dir} already exists")
 
     wav_lst = [line.rstrip() for line in open("src/PhonationModeling/data/filelists/wav.lst")]
     txtgrd_lst = [
@@ -130,7 +134,7 @@ if __name__ == "__main__":
 
         # Get creaky phone segments
         ph_intvls = dict_phone_interval(tier_phone)["AA1"]  # NOTE: phone
-        ph_segs = get_phone_segments(tier_c, ph_intvls, from_creaky=True)
+        ph_segs = get_phone_segments(tier_c, ph_intvls, from_creaky=False)
         wav_segs = get_wav_segments(wav_data, sample_rate, ph_segs)
 
         # Save to wav

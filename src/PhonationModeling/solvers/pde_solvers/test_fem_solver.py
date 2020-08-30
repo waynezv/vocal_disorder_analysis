@@ -7,13 +7,15 @@ Scheme (IPCS).
                                  div(u) = 0
 """
 
+import pdb
+
 import numpy as np
 import sympy
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+
 import fenics as F
 import mshr
-import pdb
 
 
 def UnitHyperCube(divisions):
@@ -140,10 +142,7 @@ def pde_solver(
         v = F.TestFunction(V)
 
         # Define variational problem
-        a = (
-            F.inner(u, v) * F.dx
-            + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
-        )
+        a = F.inner(u, v) * F.dx + (DT ** 2) * (C ** 2) * F.inner(F.grad(u), F.grad(v)) * F.dx
         L = ((DT ** 2) * f + 2 * u_nm1 - u_nm2) * v * F.dx
         return a, L
 
@@ -193,11 +192,7 @@ def pde_solver(
         # ddu_n = F.project(u_n.dx(0).dx(0), V).vector()[:]
 
         R = np.sum(
-            u_n_v
-            - (dt ** 2) * (c ** 2) * ddu_n_v
-            - (dt ** 2) * f_n_v
-            - 2 * u_nm1_v
-            + u_nm2_v
+            u_n_v - (dt ** 2) * (c ** 2) * ddu_n_v - (dt ** 2) * f_n_v - 2 * u_nm1_v + u_nm2_v
         )
         return R
 
@@ -337,18 +332,12 @@ def toy_probelm_1():
     length = 1.0  # spatial dimension
     divisions = (64,)  # mesh size
 
-    f = F.Expression(
-        "2*beta - 2*alpha*c*c", alpha=alpha, beta=beta, c=c, degree=BASIS_DEGREE + 2
-    )
+    f = F.Expression("2*beta - 2*alpha*c*c", alpha=alpha, beta=beta, c=c, degree=BASIS_DEGREE + 2)
 
     # Boundary expression
     g_expr = "alpha*x[0]*x[0] + beta*t*t + 1"  # NOTE: x is a vector
     u_D = F.Expression(
-        g_expr,  # NOTE: at initial time t=0
-        alpha=alpha,
-        beta=beta,
-        t=0,
-        degree=BASIS_DEGREE + 2,
+        g_expr, alpha=alpha, beta=beta, t=0, degree=BASIS_DEGREE + 2,  # NOTE: at initial time t=0
     )
 
     # Initial expression
@@ -396,12 +385,7 @@ def toy_probelm_2():
     divisions = (128,)  # mesh size
 
     f = F.Expression(
-        "2*beta + 2*alpha*x[0]*x[0] - 2*alpha*c*c*t*t",
-        alpha=alpha,
-        beta=beta,
-        c=c,
-        t=0,
-        degree=4,
+        "2*beta + 2*alpha*x[0]*x[0] - 2*alpha*c*c*t*t", alpha=alpha, beta=beta, c=c, t=0, degree=4,
     )
     # f = F.Expression('-2*alpha*c*c*t',
     # alpha=alpha, beta=beta, c=c, t=0, degree=BASIS_DEGREE+2)

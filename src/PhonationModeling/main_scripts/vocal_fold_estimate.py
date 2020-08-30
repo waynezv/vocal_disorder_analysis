@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import json
 import logging
 import logging.config
 import os
-import sys
 import pickle
-import datetime
+import sys
+from typing import Dict, List
 
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.io import wavfile
 
+from PhonationModeling.models.vocal_fold.adjoint_model_displacement import adjoint_model
 from PhonationModeling.models.vocal_fold.vocal_fold_model_displacement import (
     vdp_coupled,
     vdp_jacobian,
 )
-from PhonationModeling.models.vocal_fold.adjoint_model_displacement import adjoint_model
-from PhonationModeling.solvers.ode_solvers.ode_solver import ode_solver
 from PhonationModeling.solvers.ode_solvers.dae_solver import dae_solver
+from PhonationModeling.solvers.ode_solvers.ode_solver import ode_solver
 from PhonationModeling.solvers.optimization import optim_adapt_step, optim_grad_step
-
 
 # Load configures
 if len(sys.argv) < 2:
@@ -35,11 +35,12 @@ except OSError as e:
     print(f"OS error: {e}")
 
 # Log
+log_dir = os.path.join(configs["project_root"], configs["log_dir"])
 try:
-    os.makedirs(configs["log_dir"])
+    os.makedirs(log_dir)
 except FileExistsError:
-    print(f"folder {configs['log_dir']} already exists")
-log_file = configs["log"]["handlers"]["file"]["filename"]
+    print(f"folder {log_dir} already exists")
+log_file = os.path.join(configs["project_root"], configs["log"]["handlers"]["file"]["filename"])
 if os.path.isfile(log_file):
     print(f"file {log_file} already exists")
     raise FileExistsError
@@ -48,12 +49,20 @@ logging.config.dictConfig(configs["log"])
 logger = logging.getLogger("main")
 
 # Data
-data_root = configs["data_root"]
+data_root = os.path.join(configs["project_root"], configs["data_root"])
 wav_dir = configs["wav_dir"]
 flw_dir = configs["glottal_flow_dir"]
-wav_lst = [line.rstrip() for line in open(os.path.join(configs["list_dir"], configs["wav_list"]))]
+wav_lst = [
+    line.rstrip()
+    for line in open(
+        os.path.join(configs["project_root"], configs["list_dir"], configs["wav_list"])
+    )
+]
 flw_lst = [
-    line.rstrip() for line in open(os.path.join(configs["list_dir"], configs["glottal_flow_list"]))
+    line.rstrip()
+    for line in open(
+        os.path.join(configs["project_root"], configs["list_dir"], configs["glottal_flow_list"])
+    )
 ]
 
 # Set constants
@@ -86,9 +95,9 @@ for wf, gf in zip(wav_lst, flw_lst):
     # plt.show()
 
     # Set model initial conditions
-    alpha = 0.8  # if > 0.5 delta, stable-like oscillator
-    beta = 0.32
-    delta = 1.0  # asymmetry parameter
+    alpha = 0.5  # if > 0.5 delta, stable-like oscillator
+    beta = 0.2
+    delta = 0.5  # asymmetry parameter
     vdp_init_t = 0.0
     vdp_init_state = [0.0, 0.1, 0.0, 0.1]  # (xr, dxr, xl, dxl), xl=xr=0
     num_tsteps = len(wav_samples)  # total number of time steps
@@ -99,7 +108,7 @@ for wf, gf in zip(wav_lst, flw_lst):
     logger.info("-" * 110)
 
     # Optimize
-    best_results = {  # store best results over iterations
+    best_results: Dict[str, List[float]] = {  # store best results over iterations
         "iteration": [],  # optimize iter
         "R": [],  # estimation residual @ k
         "Rk": [],  # estimation residual w.r.t L2 norm @ k
@@ -154,7 +163,7 @@ for wf, gf in zip(wav_lst, flw_lst):
             u0 = u0 / np.linalg.norm(u0) * np.linalg.norm(glottal_flow)  # normalize
         except AssertionError as e:
             logger.error(e)
-            logger.warn("Skip")
+            logger.warning("Skip")
             break
 
         # Estimation residual
@@ -198,7 +207,7 @@ for wf, gf in zip(wav_lst, flw_lst):
             )
         except Exception as e:
             logger.error(f"Exception: {e}")
-            logger.warn("Skip")
+            logger.warning("Skip")
             break
 
         # Compute adjoint lagrange multipliers
@@ -338,13 +347,14 @@ for wf, gf in zip(wav_lst, flw_lst):
 
 # Save results
 logger.info("Saving results")
+results_save_dir = os.path.join(configs["project_root"], configs["results_save_dir"])
 try:
-    os.makedirs(configs["results_save_dir"])
+    os.makedirs(results_save_dir)
 except FileExistsError:
-    logger.warn(f"folder {configs['results_save_dir']} already exists")
-save_file = os.path.join(configs["results_save_dir"], configs["results_save_filename"] + ".pkl")
+    logger.warning(f"folder {results_save_dir} already exists")
+save_file = os.path.join(results_save_dir, configs["results_save_filename"] + ".pkl")
 if os.path.isfile(save_file):
-    logger.warn(f"file {save_file} already exists")
+    logger.warning(f"file {save_file} already exists")
     save_file = save_file + f".{datetime.datetime.now().date()}"
 try:
     with open(save_file, "wb") as f:

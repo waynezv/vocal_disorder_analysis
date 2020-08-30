@@ -1,67 +1,70 @@
 # -*- coding: utf-8 -*-
+from typing import Callable, List
 
 import numpy as np
-import pdb
 
 
-def adjoint_model(alpha, beta, delta, X, dX, R, fs, t0, tf):
+def adjoint_model(
+    alpha: float,
+    beta: float,
+    delta: float,
+    X: List[List[float]],
+    dX: List[List[float]],
+    R: List[float],
+    fs: int,
+    t0: float,
+    tf: float,
+):
+    """ Adjoint model for the 1-d vocal fold displacement model.
+    Used to solve the derivatives of right/left vocal fold displacements w.r.t. 
+        model parameters (alpha, beta, delta).
+
+    Args:
+        alpha: float
+            Glottal pressure coupling parameter.
+        beta: float
+            Mass, damping, stiffness parameter.
+        delta: float
+            Asymmetry parameter.
+        X: List[List[float]]
+            Vocal fold displacements [x_r, x_l].
+        dX: List[List[fliat]]
+            Vocal fold velocity [dx_r, dx_l].
+        R: List[float]
+            Term c.r.t. the difference between predicted and actual volume velocity flows.
+        fs: int
+            Sample rate.
+        t0: float
+            Start time.
+        tf: float
+            Stop time.
+
+    Returns:
+        residual: Callable[[float, List[float], List[float]], np.ndarray]
+            Adjoint model.
+        jac: Callable[[float, float, List[float], List[float]], np.ndarray]
+            Jacobian of the adjoint model.
     """
-    Adjoint model for the 1-d vocal fold oscillation model.
-    Used to solve derivatives of left/right vocal fold displacements
-        w.r.t. model parameters (alpha, beta, delta).
 
-    Parameters
-    ----------
-    alpha: float
-        Glottal pressure coupling parameter.
-    beta: float
-        Mass, elastic, damping parameter.
-    delta: float
-        Asymmetry parameter.
-    X: List[float]
-        Vocal fold displacements [x_r, x_l].
-    dX: List[fliat]
-        Vocal fold velocity [dx_r, dx_l].
-    R: List[float]
-        Extra term c.r.t. the difference between
-        predicted and real volume velocity flows.
-    fs: int
-        Sample rate.
-    t0: float
-        Start time.
-    tf: float
-        Stop time.
+    def residual(t: float, M: List[float], dM: List[float]) -> np.ndarray:
+        """ Defines the adjoint model, which should be in the implicit form:
+                0 <-- res = F(t, M, dM)
 
-    Returns
-    -------
-    residual: function
-        Defines the adjoint model.
-    jac: function
-        Jacobian of the adjoint model.
-    """
+        Args:
+            t: float
+                Time.
+            M: List[float]
+                State variables [L, dL, E, dE].
+            dM: List[float]
+                Derivatives of state variables [dL, ddL, dE, ddE].
 
-    def residual(t, M, dM):
-        """
-        Defines the implicit problem, which should be of the form
-            0 <-- res = F(t, M, dM).
-
-        Parameters
-        ----------
-        t: float
-            Time.
-        M: List[float]
-            State variables [L, dL, E, dE].
-        dM: List[float]
-            Derivative of state variables [dL, ddL, dE, ddE].
-
-        Returns
-        -------
-        res: np.array[float], shape (len(M),)
-            Residual vector.
+        Returns:
+            res: np.ndarray[float], shape (len(M),)
+                Residual vector.
         """
         # Convert t to [0, T]
         t = t - t0
-        # Convert t(s) --> idx(#sample)
+        # Convert t(s) to idx(#sample)
         idx = int(round(t * fs) - 1)
         if idx < 0:
             idx = 0
@@ -80,33 +83,31 @@ def adjoint_model(alpha, beta, delta, X, dX, R, fs, t0, tf):
         res_4 = beta * M[2] * (1 + x[1] ** 2) - alpha * (M[0] + M[2])
 
         res = np.array([res_1, res_2, res_3, res_4])
+
         return res
 
-    def jac(c, t, M, Md):
-        """
-        Defines the Jacobian, which should be of the form
-            J = dF/dM + c*dF/d(dM).
+    def jac(c: float, t: float, M: List[float], Md: List[float]) -> np.ndarray:
+        """ Defines the Jacobian of the adjoint model, which should be in the form:
+                J = dF/dM + c*dF/d(dM)
 
-        Parameters
-        ----------
-        c: float
-            Constant.
-        t: float
-            Time.
-        M: List[float]
-            State variables [L, dL, E, dE].
-        dM: List[float]
-            Derivative of state variables [dL, ddL, dE, ddE].
+        Args:
+            c: float
+                Constant.
+            t: float
+                Time.
+            M: List[float]
+                State variables [L, dL, E, dE].
+            dM: List[float]
+                Derivative of state variables [dL, ddL, dE, ddE].
 
-        Returns
-        -------
-        jacobian: np.array[float], shape (len(M), len(M))
-            Jacobian matrix.
+        Returns:
+            jacobian: np.ndarray[float], shape (len(M), len(M))
+                Jacobian matrix.
         """
         # Convert t to [0, T]
         T = tf - t0
         t = (t - t0) / (tf - t0) * T
-        # Convert t(s) --> idx(#sample)
+        # Convert t(s) to idx(#sample)
         idx = int(round(t * fs) - 1)
         if idx < 0:
             idx = 0

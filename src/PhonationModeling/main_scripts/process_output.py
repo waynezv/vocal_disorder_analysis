@@ -1,12 +1,13 @@
 import os
-import sys
 import pickle
+import sys
 
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 if __name__ == "__main__":
-    filename = "creaky_voice/src/main_scripts/outputs/vocal_fold_estimate/results/best_results_08162020.pkl"
+    # filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate/results/best_results_08242020_AA1.pkl"
+    filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08292020_patient_4_gordon_boaz_serv_2.pkl"
     try:
         with open(filename, "rb") as f:
             results = pickle.load(f)
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     betas = []
     deltas = []
     for wf in results:
-        print(f"Processing {wf}")
+        # print(f"Processing {wf}")
         try:
             assert ("alpha" in results[wf]) and (results[wf]["alpha"])
             alpha = results[wf]["alpha"][0]
@@ -34,7 +35,8 @@ if __name__ == "__main__":
             print(f"Skip {wf}")
             continue
 
-    filename = "creaky_voice/src/main_scripts/outputs/vocal_fold_estimate/results/best_results_08232020_medium.pkl"
+    # filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate/results/best_results_08252020_AA1_normal.pkl"
+    filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08292020_normal_2.pkl"
     try:
         with open(filename, "rb") as f:
             results = pickle.load(f)
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     betas_n = []
     deltas_n = []
     for wf in results:
-        print(f"Processing {wf}")
+        # print(f"Processing {wf}")
         try:
             assert ("alpha" in results[wf]) and (results[wf]["alpha"])
             alpha = results[wf]["alpha"][0]
@@ -64,7 +66,8 @@ if __name__ == "__main__":
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
-    ax.scatter(alphas, deltas, betas, c="b", marker="o", label="creaky")
+    # ax.scatter(alphas, deltas, betas, c="b", marker="o", label="creaky")
+    ax.scatter(alphas, deltas, betas, c="b", marker="o", label="vocal paralysis")
     ax.scatter(alphas_n, deltas_n, betas_n, c="r", marker="o", label="normal")
     ax.set_xlabel("alpha")
     ax.set_ylabel("delta")
