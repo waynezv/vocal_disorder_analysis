@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 if __name__ == "__main__":
     # filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate/results/best_results_08242020_AA1.pkl"
-    filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08292020_patient_4_gordon_boaz_serv_2.pkl"
+    filename = "experiments/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08302020_patient_4_gordon_boaz_randinit.pkl"
     try:
         with open(filename, "rb") as f:
             results = pickle.load(f)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
             continue
 
     # filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate/results/best_results_08252020_AA1_normal.pkl"
-    filename = "src/PhonationModeling/main_scripts/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08292020_normal_2.pkl"
+    filename = "experiments/outputs/vocal_fold_estimate-vocal_paralysis/results/best_results_08302020_normal_randinit.pkl"
     try:
         with open(filename, "rb") as f:
             results = pickle.load(f)

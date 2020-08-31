@@ -1,18 +1,21 @@
-# -*- coding: utf-8 -*-
-
+import argparse
 import datetime
+import importlib
 import json
 import logging
 import logging.config
 import os
 import pickle
+import shutil
 import sys
 from typing import Dict, List
 
+import librosa
+import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import pyplot as plt
 from scipy.io import wavfile
 
+from PhonationModeling.external.pypevoc.speech.glottal import iaif_ola
 from PhonationModeling.models.vocal_fold.adjoint_model_displacement import adjoint_model
 from PhonationModeling.models.vocal_fold.vocal_fold_model_displacement import (
     vdp_coupled,
@@ -22,13 +25,15 @@ from PhonationModeling.solvers.ode_solvers.dae_solver import dae_solver
 from PhonationModeling.solvers.ode_solvers.ode_solver import ode_solver
 from PhonationModeling.solvers.optimization import optim_adapt_step, optim_grad_step
 
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-cf", "--configure_file", required=True, help="configure file for experiment")
+args = parser.parse_args()
+
 # Load configures
-if len(sys.argv) < 2:
-    print(f"Usage: python {sys.argv[0]} configure.json")
-    print("Need to provide configure file!")
-    sys.exit(-1)
+configure_file = args.configure_file
 try:
-    with open(sys.argv[1], "r") as f:
+    with open(configure_file) as f:
         configs = json.load(f)
 except OSError as e:
     print(f"OS error: {e}")
@@ -46,23 +51,23 @@ if os.path.isfile(log_file):
 # Setup logger
 logging.config.dictConfig(configs["log"])
 logger = logging.getLogger("main")
+# Copy configure file to log dir
+try:
+    target_file = os.path.join(
+        log_dir,
+        os.path.basename(log_file) + ".configure.json" + f".{datetime.datetime.now().date()}",
+    )
+    shutil.copyfile(configure_file, target_file)
+except IOError as e:
+    logger.exception(f"Unable to copy file: {e}")
+logger.info(f"Copied {configure_file} to {target_file}")
 
 # Data
-data_root = os.path.join(configs["project_root"], configs["data_root"])
-wav_dir = configs["wav_dir"]
-flw_dir = configs["glottal_flow_dir"]
-wav_lst = [
-    line.rstrip()
-    for line in open(
-        os.path.join(configs["project_root"], configs["list_dir"], configs["wav_list"])
-    )
-]
-flw_lst = [
-    line.rstrip()
-    for line in open(
-        os.path.join(configs["project_root"], configs["list_dir"], configs["glottal_flow_list"])
-    )
-]
+project_root = configs["project_root"]
+data_root = os.path.join(project_root, configs["data_root"])
+wav_dir = os.path.join(data_root, configs["wav_dir"])
+list_dir = os.path.join(data_root, configs["list_dir"])
+wav_lst = [line.rstrip() for line in open(os.path.join(list_dir, configs["wav_list"]))]
 
 # Set constants
 M = 0.5  # mass, g/cm^2
@@ -74,11 +79,22 @@ c = 5000  # air particle velocity, cm/s
 eta = 1.0  # nonlinear factor for energy dissipation at large amplitude
 
 results_collection = dict()  # store model results for each file
-for wf, gf in zip(wav_lst, flw_lst):
-    # Load data
-    logger.info(f"Loading data for {wf}")
-    sample_rate, wav_samples = wavfile.read(os.path.join(data_root, wav_dir, wf))
-    glottal_flow = np.load(os.path.join(data_root, flw_dir, gf))
+for wf in wav_lst:
+    # Read wav
+    logger.info(f"Reading {wf}")
+    sample_rate, wav_samples = wavfile.read(os.path.join(wav_dir, wf))
+    if wav_samples.dtype.name == "int16":
+        # Convert from 16-bit int to 32-bit float
+        wav_samples = (wav_samples / pow(2, 15)).astype("float32")
+
+    # Extract glottal flow
+    logger.info("Extracting glottal flow")
+    glottal_flow, _, _, _ = iaif_ola(
+        wav_samples,
+        Fs=sample_rate,
+        tract_order=2 * int(np.round(sample_rate / 2000)) + 4,
+        glottal_order=2 * int(np.round(sample_rate / 4000)),
+    )
     assert len(glottal_flow) == len(
         wav_samples
     ), f"Inconsistent length: glottal flow ({len(glottal_flow):d}) / wav samples ({len(wav_samples):d})"

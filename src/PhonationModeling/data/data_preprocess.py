@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
         # Read wav
         sample_rate, wav_raw = wavfile.read(os.path.join(data_root, "wavs", wf))
-        # Convert from to 16-bit int to 32-bit float
+        # Convert from 16-bit int to 32-bit float
         wav_data = (wav_raw / pow(2, 15)).astype("float32")
 
         # Read textgrid
