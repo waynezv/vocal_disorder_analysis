@@ -255,7 +255,7 @@ for wf in wav_lst:
             delta_best = delta_k
             sol_best = sol
             u0_best = u0
-            pv_best = np.array([alpha_best, beta_best, delta_best])  # param vector
+            pv_best = np.array([alpha_best, beta_best, delta_best])  # best param vector
 
             # Compute gradients
             d_alpha = -np.dot((dX[:num_tsteps, 0] + dX[:num_tsteps, 1]), (L + E))
@@ -270,11 +270,12 @@ for wf in wav_lst:
 
             # Update
             alpha, beta, delta = optim_grad_step(
-                alpha, beta, delta, d_alpha, d_beta, d_delta, stepsize=0.1
+                alpha, beta, delta, d_alpha, d_beta, d_delta, stepsize=configs["step_size"],
             )
             # alpha, beta, delta = optim_adapt_step(
             # alpha, beta, delta, d_alpha, d_beta, d_delta, default_step=0.1
             # )
+            pv_new = np.array([alpha, beta, delta])  # param vector after update
             iteration += 1
             logger.info(
                 f"[{patience:d}:{iteration:d}] IMPROV: alpha = {alpha:.4f}   beta = {beta:.4f}   "
@@ -284,8 +285,6 @@ for wf in wav_lst:
             patience = patience + 1
 
             # Compute conjugate gradients
-            dpv = np.array([d_alpha, d_beta, d_delta])  # param grad vector
-            dpv = dpv / np.linalg.norm(dpv)  # normalize
             ov = np.random.randn(len(dpv))  # orthogonal vector
             ov = ov - (np.dot(ov, dpv) / np.dot(dpv, dpv)) * dpv  # orthogonalize
             ov = ov / np.linalg.norm(ov)  # normalize
@@ -293,7 +292,13 @@ for wf in wav_lst:
 
             # Reverse previous update & update in conjugate direction
             alpha, beta, delta = optim_grad_step(
-                alpha_best, beta_best, delta_best, d_alpha, d_beta, d_delta, stepsize=0.1,
+                alpha_best,
+                beta_best,
+                delta_best,
+                d_alpha,
+                d_beta,
+                d_delta,
+                stepsize=configs["step_size"],
             )
             # alpha, beta, delta = optim_adapt_step(
             #     alpha_best,
@@ -304,6 +309,7 @@ for wf in wav_lst:
             #     d_delta,
             #     default_step=0.1,
             # )
+            pv_new = np.array([alpha, beta, delta])  # param vector after update
             iteration += 1
             logger.info(
                 f"[{patience:d}:{iteration:d}] NO IMPROV: alpha = {alpha:.4f}   beta = {beta:.4f}   "
