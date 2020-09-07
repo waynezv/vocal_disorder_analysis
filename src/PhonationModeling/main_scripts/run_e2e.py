@@ -164,21 +164,23 @@ for wf in wav_lst:
             dt=(time_scaling / float(sample_rate)),  # dt -> ds
             tmax=(time_scaling * T),
         )
-        if len(sol) > len(wav_samples):
-            sol = sol[:-1]
-        assert len(sol) == len(
-            wav_samples
-        ), f"Inconsistent length: ODE sol ({len(sol):d}) / wav samples ({len(wav_samples):d})"
 
         # Calculate glottal flow
         try:
             assert sol.size > 0
+
+            if len(sol) > len(wav_samples):
+                sol = sol[:-1]
+            assert len(sol) == len(
+                wav_samples
+            ), f"Inconsistent length: ODE sol ({len(sol):d}) / wav samples ({len(wav_samples):d})"
+
             X = sol[:, [1, 3]]  # vocal fold displacement (right, left), cm
             dX = sol[:, [2, 4]]  # cm/s
             u0 = c * d * (np.sum(X, axis=1) + 2 * x0)  # volume velocity flow, cm^3/s
             u0 = u0 / np.linalg.norm(u0) * np.linalg.norm(glottal_flow)  # normalize
         except AssertionError as e:
-            logger.error(e)
+            logger.error(f"AssertionError: {e}")
             logger.warning("Skip")
             break
 
@@ -318,9 +320,9 @@ for wf in wav_lst:
 
         while (alpha <= 0.01) or (beta <= 0.01) or (delta <= 0.01):  # if param goes below 0
             if_adjust = 1
-            rv = np.random.randn(len(pv_best))  # radius
+            rv = np.random.random(len(pv_best))  # radius
             rv = rv / np.linalg.norm(rv)  # normalize to 1
-            pv = pv_best + 0.01 * rv  # perturb within a 0.01 radius ball
+            pv = pv_best + 2 * configs["step_size"] * rv  # perturb within a ball
             alpha, beta, delta = pv
         if if_adjust:
             logger.info(

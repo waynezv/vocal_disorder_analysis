@@ -198,6 +198,7 @@ if __name__ == "__main__":
     ax.set_zlabel("beta")
     ax.legend()
     ax.grid(True)
+    ax.view_init(5, -75)
 
     plt.tight_layout()
     plt.show()

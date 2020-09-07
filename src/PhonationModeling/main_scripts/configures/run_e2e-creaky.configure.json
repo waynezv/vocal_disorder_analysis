@@ -6,7 +6,7 @@
     "list_dir": "filelists",
     "wav_list": "phone_segs_AA1_creaky.lst",
     "results_save_dir": "experiments/outputs/vocal_fold_estimate-creaky/results",
-    "results_save_filename": "best_results_09032020-creaky_AA1-randinit_updtbst_0.2",
+    "results_save_filename": "best_results_09042020-creaky_AA1-randinit_updtbst_0.2",
     "optim_patience": 400,
     "step_size": 0.2,
     "__comment__": "Log",
@@ -32,7 +32,7 @@
                 "class": "logging.handlers.RotatingFileHandler",
                 "level": "DEBUG",
                 "formatter": "custom",
-                "filename": "/home/wzhao/ProJEX/vocal_disorder_analysis/experiments/outputs/vocal_fold_estimate-creaky/logs/run_09032020-creaky_AA1-randinit_updtbst_0.2",
+                "filename": "/home/wzhao/ProJEX/vocal_disorder_analysis/experiments/outputs/vocal_fold_estimate-creaky/logs/run_09042020-creaky_AA1-randinit_updtbst_0.2",
                 "maxBytes": 10485760,
                 "backupCount": 20,
                 "encoding": "utf8"
